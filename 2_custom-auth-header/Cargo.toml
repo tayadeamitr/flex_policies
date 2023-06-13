@@ -1,5 +1,5 @@
 [package]
-name = "custom-auth-header"
+name = "custom_auth_header"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,7 +7,7 @@ edition = "2021"
 
 [lib]
 crate-type = ["cdylib"]
-name="custom-auth-header"
+name="custom_auth_header"
 path="src/lib.rs"
 
 [dependencies]
