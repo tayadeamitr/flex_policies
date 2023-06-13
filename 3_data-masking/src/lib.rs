@@ -38,14 +38,11 @@ impl HttpContext for HttpConfigHeader {
     fn on_http_response_body(&mut self, _body_size: usize, _end_of_stream: bool) -> Action {
         info!("on_http_response_body");
         if !_end_of_stream {
-            // Wait -- we'll be called again when the complete body is buffered
-            // at the host side.
             info!("on_http_response_body wait end of stream");
             return Action::Pause;
         }
 
         // Replace the attribute masking it.
-        // Since we returned "Pause" previuously, this will return the whole body.
         if let Some(body_bytes) = self.get_http_response_body(0, _body_size) {
             info!("on_http_response_body wait read body");
             let body_str = String::from_utf8(body_bytes).unwrap();
