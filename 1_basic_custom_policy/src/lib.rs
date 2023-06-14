@@ -65,4 +65,15 @@ impl HttpContext for CustomAuthHttpContext {
 
         Action::Pause
     }
+    fn on_http_request_body(&mut self, _body_size: usize, _end_of_stream: bool) -> Action {
+        Action::Continue
+    }
+
+    fn on_http_response_headers(&mut self, _num_headers: usize, _end_of_stream: bool) -> Action {
+        Action::Continue
+    }
+
+    fn on_http_response_body(&mut self, _body_size: usize, _end_of_stream: bool) -> Action {
+        Action::Continue
+    }
 }
