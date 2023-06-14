@@ -4,7 +4,7 @@ use proxy_wasm::types::*;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
-//entrypoint
+// Entrypoint
 proxy_wasm::main! {{
     proxy_wasm::set_log_level(LogLevel::Trace);
     proxy_wasm::set_root_context(|_| -> Box<dyn RootContext> {
@@ -16,17 +16,17 @@ proxy_wasm::main! {{
         })
     });
 }}
-//alias
+// Alias
 #[derive(Serialize, Deserialize)]
 struct PolicyConfig {
     #[serde(alias = "old-field-name")]
     old_field_name: String,
     #[serde(alias = "new-field-name")]
     new_field_name: String,
-    #[serde(alias = "new-field-name")]
+    #[serde(alias = "new-field-value")]
     new_field_value: String,
 }
-//root context
+// Root context
 struct HttpConfigHeaderRoot {
     old_field_name: String,
     new_field_name: String,
@@ -43,7 +43,7 @@ impl RootContext for HttpConfigHeaderRoot {
             self.new_field_value = config.new_field_value;
 
             info!(
-                "old field name is {} which will be replaced with {} and value: {} ",
+                "Old field name is {}, which will be replaced with {} and value: {}",
                 self.old_field_name, self.new_field_name, self.new_field_value
             );
         }
@@ -62,7 +62,7 @@ impl RootContext for HttpConfigHeaderRoot {
         Some(ContextType::HttpContext)
     }
 }
-//http context
+//HTTP context
 struct HttpConfigHeader {
     old_field_name: String,
     new_field_name: String,
@@ -94,19 +94,19 @@ impl HttpContext for HttpConfigHeader {
             return Action::Pause;
         }
 
-        // Replace the attribute masking it.
+        // Replace the attribute and its value.
         if let Some(body_bytes) = self.get_http_response_body(0, _body_size) {
             info!("on_http_response_body wait read body");
             let body_str = String::from_utf8(body_bytes).unwrap();
             let body_str_new = transform(
                 body_str,
                 (
-                    String::from(self.old_field_name.as_mut()),
-                    String::from(self.new_field_name.as_mut()),
-                    String::from(self.new_field_value.as_mut()),
+                    self.old_field_name.clone(),
+                    self.new_field_name.clone(),
+                    self.new_field_value.clone(),
                 ),
             );
-            self.set_http_response_body(0, _body_size, &body_str_new.into_bytes());
+            self.set_http_response_body(0, _body_size, body_str_new.as_bytes());
         }
         Action::Continue
     }
@@ -114,11 +114,11 @@ impl HttpContext for HttpConfigHeader {
 
 fn transform(input: String, (old_field, new_field, new_value): (String, String, String)) -> String {
     info!("transform function");
-    let mut v: Value = serde_json::from_str(input.as_str()).unwrap();
+    let mut v: Value = serde_json::from_str(&input).unwrap();
     if let Some(body_v) = v.as_object_mut() {
-        if let Some(_field_value) = body_v.remove(old_field.as_str()) {
-            body_v.insert(new_field.to_owned(), json!(new_value.as_str()));
+        if let Some(_) = body_v.remove(&old_field) {
+            body_v.insert(new_field, json!(new_value));
         }
     }
-    return v.to_string();
+    v.to_string()
 }
