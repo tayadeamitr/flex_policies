@@ -44,7 +44,6 @@ impl RootContext for RateLimitRoot {
 }
 
 // Http context
-#[warn(dead_code)]
 struct RateLimitPolicy {
     rate_limit: u32,
     window_size: u32,
